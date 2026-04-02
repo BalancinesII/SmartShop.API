@@ -1,0 +1,16 @@
+# Secretos locales
+**/appsettings.Development.json
+**/appsettings.*.json
+!**/appsettings.json
+
+# Build
+**/bin/
+**/obj/
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Migrations opcionales (puedes quitarlo si quieres subir las migrations)
+# **/Migrations/
