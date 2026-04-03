@@ -8,28 +8,30 @@ namespace SmartShop.Application.Chat.Commands.SendMessage;
 public class SendMessageHandler : IRequestHandler<SendMessageCommand, SendMessageResponseDto>
 {
     private readonly IChatRepository _chatRepository;
+    private readonly IProductRepository _productRepository;
     private readonly IAIService _aiService;
 
-    public SendMessageHandler(IChatRepository chatRepository, IAIService aiService)
+    public SendMessageHandler(IChatRepository chatRepository,
+                               IProductRepository productRepository,
+                               IAIService aiService)
     {
         _chatRepository = chatRepository;
+        _productRepository = productRepository;
         _aiService = aiService;
     }
 
     public async Task<SendMessageResponseDto> Handle(SendMessageCommand request,
                                                       CancellationToken cancellationToken)
     {
-        // Recuperar historial de la sesión
         var history = await _chatRepository.GetSessionMessagesAsync(request.SessionId);
+        var products = await _productRepository.GetAllAsync();
 
-        // Guardar mensaje del usuario
         var userMessage = ChatMessage.Create(request.SessionId, "user", request.Message);
         await _chatRepository.AddMessageAsync(userMessage);
 
-        // Llamar a Claude con el historial
-        var aiResponse = await _aiService.SendChatMessageAsync(request.Message, history);
+        var aiResponse = await _aiService.SendChatMessageAsync(
+            request.Message, history, products);
 
-        // Guardar respuesta del asistente
         var assistantMessage = ChatMessage.Create(request.SessionId, "assistant", aiResponse);
         await _chatRepository.AddMessageAsync(assistantMessage);
 

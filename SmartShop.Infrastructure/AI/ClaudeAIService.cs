@@ -46,7 +46,9 @@ public class ClaudeAIService : IAIService
     }
 
     public async Task<string> SendChatMessageAsync(
-        string userMessage, IEnumerable<ChatMessage> history)
+    string userMessage,
+    IEnumerable<ChatMessage> history,
+    IEnumerable<Product> availableProducts)
     {
         var messages = new List<Message>();
 
@@ -58,20 +60,31 @@ public class ClaudeAIService : IAIService
 
         messages.Add(new Message(RoleType.User, userMessage));
 
+        var productCatalog = availableProducts.Any()
+            ? string.Join("\n", availableProducts.Select(p =>
+                $"- {p.Name} | Categoría: {p.Category} | Precio: {p.Price:C} | Stock: {p.Stock}"))
+            : "No hay productos disponibles en este momento.";
+
         var request = new MessageParameters
         {
             Model = Model,
             MaxTokens = 500,
             System = new List<SystemMessage>
-            {
-                new SystemMessage(
-                    """
-                    Eres el asistente virtual de SmartShop, una tienda online.
-                    Ayudas a los clientes con preguntas sobre productos, pedidos y devoluciones.
-                    Responde siempre en el idioma del cliente.
-                    Sé amable, conciso y útil. Si no sabes algo, dilo con honestidad.
-                    """)
-            },
+        {
+            new SystemMessage(
+                $"""
+                Eres el asistente virtual de SmartShop, una tienda online.
+                Ayudas a los clientes con preguntas sobre productos, pedidos y devoluciones.
+                Responde siempre en el idioma del cliente.
+                Sé amable, conciso y útil. Si no sabes algo, dilo con honestidad.
+
+                CATÁLOGO DE PRODUCTOS DISPONIBLES:
+                {productCatalog}
+
+                Usa esta información para responder preguntas sobre disponibilidad,
+                precios y categorías. No inventes productos que no estén en el catálogo.
+                """)
+        },
             Messages = messages
         };
 

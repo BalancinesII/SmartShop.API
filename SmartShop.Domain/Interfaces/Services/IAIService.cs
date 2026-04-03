@@ -9,5 +9,6 @@ public interface IAIService
                                                   decimal price);
 
     Task<string> SendChatMessageAsync(string userMessage,
-                                       IEnumerable<ChatMessage> history);
-}   
+                                       IEnumerable<ChatMessage> history,
+                                       IEnumerable<Product> availableProducts);
+}
