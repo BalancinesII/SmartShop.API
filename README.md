@@ -1,13 +1,15 @@
 # SmartShop API
 
-ASP.NET Core 8 REST API for an ecommerce platform with AI-powered features using the Claude API.
+ASP.NET Core 8 REST API for an ecommerce platform with AI-powered features using the Anthropic Claude API.
 
 ## Features
 
 - **AI product descriptions** — automatically generates compelling product descriptions using Claude
-- **AI customer support chatbot** — multi-turn conversational assistant with persistent chat history
+- **AI customer support chatbot** — multi-turn conversational assistant with persistent chat history and real product catalog context
 - **JWT authentication** — register and login with token-based auth
-- **Product management** — full CRUD for products
+- **Full product CRUD** — create, read, update and delete products
+- **Input validation** — FluentValidation pipeline with descriptive error messages
+- **Global exception handling** — consistent error responses across all endpoints
 - **Clean Architecture** — domain-centric design with clear separation of concerns
 - **CQRS with MediatR** — every use case is an isolated, testable handler
 - **13 automated tests** — unit and integration test coverage
@@ -51,6 +53,8 @@ Dependency rule: outer layers depend on inner layers, never the reverse.
 |---|---|---|---|
 | GET | `/api/Products` | — | Get all active products |
 | POST | `/api/Products` | — | Create a product |
+| PUT | `/api/Products/{id}` | ✅ | Update a product |
+| DELETE | `/api/Products/{id}` | ✅ | Delete a product |
 | POST | `/api/Products/{id}/describe` | ✅ | Generate AI description |
 
 ### Chat
@@ -92,13 +96,12 @@ cd SmartShop.API
 
 3. Apply database migrations
 ```bash
-cd SmartShop.API
-dotnet ef database update --project ../SmartShop.Infrastructure
+dotnet ef database update --project SmartShop.Infrastructure --startup-project SmartShop.API
 ```
 
 4. Run the API
 ```bash
-dotnet run
+dotnet run --project SmartShop.API
 ```
 
 5. Open Swagger at `https://localhost:7024/swagger`
@@ -111,15 +114,22 @@ dotnet test
 ## AI integration
 
 ### Product description generation
-Sends product name, category and price to Claude and returns a 2-3 sentence persuasive description in the user's language. The description is persisted to the database.
+Sends product name, category and price to Claude and returns a 2-3 sentence persuasive description. The description is persisted to the database.
 
 ### Customer support chatbot
-Maintains conversation history per session (stored in SQL Server). Each request includes the last 10 messages as context so Claude can follow the conversation naturally.
+Maintains conversation history per session stored in SQL Server. Each request includes the last 10 messages as context and the full product catalog so Claude can answer questions about real inventory, prices and availability.
 
 ## Project status
 
-MVP complete. Planned improvements:
+- [x] Clean Architecture with 4 layers
+- [x] CQRS with MediatR
+- [x] EF Core + SQL Server
+- [x] JWT Authentication
+- [x] AI product descriptions
+- [x] AI chatbot with product catalog context
+- [x] Input validation with FluentValidation
+- [x] Global exception handling
+- [x] Unit and integration tests
 - [ ] Role-based authorization (Admin / Customer)
-- [ ] Order management
-- [ ] Product search with semantic similarity
-- [ ] Azure deployment
+- [ ] Pagination
+- [ ] Azure deployment with CI/CD
