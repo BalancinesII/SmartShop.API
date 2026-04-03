@@ -48,7 +48,7 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>
         var response = await _client.PostAsJsonAsync("/api/Auth/register", command);
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
     [Fact]
@@ -80,6 +80,6 @@ public class AuthControllerTests : IClassFixture<CustomWebApplicationFactory>
             new LoginCommand("noexiste@smartshop.com", "wrongpassword"));
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.InternalServerError);
+        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
     }
 }

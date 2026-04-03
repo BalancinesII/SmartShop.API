@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using System.Text.Json;
 using SmartShop.Application.Common.Exceptions;
+using FluentValidation;
 
 namespace SmartShop.API.Middleware;
 
@@ -34,6 +35,8 @@ public class ExceptionMiddleware
 
         var (statusCode, message) = exception switch
         {
+            ValidationException ex => (HttpStatusCode.BadRequest,
+                string.Join(" | ", ex.Errors.Select(e => e.ErrorMessage))),
             NotFoundException => (HttpStatusCode.NotFound, exception.Message),
             UnauthorizedAccessException => (HttpStatusCode.Unauthorized, exception.Message),
             InvalidOperationException => (HttpStatusCode.BadRequest, exception.Message),
