@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SmartShop.API.Middleware;
 using SmartShop.Application;
@@ -90,7 +91,19 @@ app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
 
-await SeedAdminUserAsync(app);
+// El seed del Admin no debe impedir que la API arranque: si la base de datos
+// está "despertando" (tier gratuito serverless) o hay cualquier otro fallo
+// transitorio, lo registramos y dejamos que la app siga sirviendo peticiones
+// con normalidad (EnableRetryOnFailure ya cubre la mayoría de estos casos,
+// esto es una red de seguridad adicional).
+try
+{
+    await SeedAdminUserAsync(app);
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "No se pudo sembrar el usuario Admin al arrancar. La app continúa sin él.");
+}
 
 app.Run();
 
