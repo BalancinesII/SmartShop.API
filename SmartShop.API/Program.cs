@@ -1,6 +1,7 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using SmartShop.API.Middleware;
@@ -90,6 +91,22 @@ app.UseCors(AngularDevCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+// Aplica las migraciones pendientes al arrancar. Igual que con el seed del
+// Admin, no debe tumbar la app si falla (p. ej. la base de datos aún está
+// despertando) — simplemente lo registramos y la API sigue sirviendo lo que
+// pueda; en el próximo arranque (o la próxima vez que EnableRetryOnFailure
+// reintente) se aplicará igualmente.
+try
+{
+    using var migrationScope = app.Services.CreateScope();
+    var db = migrationScope.ServiceProvider.GetRequiredService<SmartShop.Infrastructure.Persistence.SmartShopDbContext>();
+    await db.Database.MigrateAsync();
+}
+catch (Exception ex)
+{
+    app.Logger.LogError(ex, "No se pudieron aplicar las migraciones al arrancar.");
+}
 
 // El seed del Admin no debe impedir que la API arranque: si la base de datos
 // está "despertando" (tier gratuito serverless) o hay cualquier otro fallo
