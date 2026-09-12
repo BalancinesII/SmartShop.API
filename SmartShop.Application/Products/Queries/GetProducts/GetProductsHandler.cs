@@ -4,8 +4,9 @@ using SmartShop.Domain.Interfaces.Repositories;
 
 namespace SmartShop.Application.Products.Queries.GetProducts;
 
-public class GetProductsHandler : IRequestHandler<GetProductsQuery, IEnumerable<ProductDto>>
+public class GetProductsHandler : IRequestHandler<GetProductsQuery, PagedResult<ProductDto>>
 {
+    private const int MaxPageSize = 50;
     private readonly IProductRepository _productRepository;
 
     public GetProductsHandler(IProductRepository productRepository)
@@ -13,12 +14,15 @@ public class GetProductsHandler : IRequestHandler<GetProductsQuery, IEnumerable<
         _productRepository = productRepository;
     }
 
-    public async Task<IEnumerable<ProductDto>> Handle(GetProductsQuery request,
+    public async Task<PagedResult<ProductDto>> Handle(GetProductsQuery request,
                                                        CancellationToken cancellationToken)
     {
-        var products = await _productRepository.GetAllAsync();
+        var pageNumber = request.PageNumber < 1 ? 1 : request.PageNumber;
+        var pageSize = request.PageSize < 1 ? 10 : Math.Min(request.PageSize, MaxPageSize);
 
-        return products.Select(p => new ProductDto
+        var (products, totalCount) = await _productRepository.GetPagedAsync(pageNumber, pageSize);
+
+        var items = products.Select(p => new ProductDto
         {
             Id = p.Id,
             Name = p.Name,
@@ -28,5 +32,13 @@ public class GetProductsHandler : IRequestHandler<GetProductsQuery, IEnumerable<
             Category = p.Category,
             IsActive = p.IsActive
         });
+
+        return new PagedResult<ProductDto>
+        {
+            Items = items,
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount
+        };
     }
 }

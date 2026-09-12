@@ -21,13 +21,14 @@ public class ProductsController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
     {
-        var products = await _mediator.Send(new GetProductsQuery());
+        var products = await _mediator.Send(new GetProductsQuery(pageNumber, pageSize));
         return Ok(products);
     }
 
     [HttpPost]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Create([FromBody] CreateProductCommand command)
     {
         var product = await _mediator.Send(command);
@@ -35,7 +36,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductCommand command)
     {
         if (id != command.Id)
@@ -46,7 +47,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> Delete(Guid id)
     {
         await _mediator.Send(new DeleteProductCommand(id));
@@ -54,7 +55,7 @@ public class ProductsController : ControllerBase
     }
 
     [HttpPost("{id}/describe")]
-    [Authorize]
+    [Authorize(Roles = "Admin")]
     public async Task<IActionResult> GenerateDescription(Guid id)
     {
         var description = await _mediator.Send(new GenerateDescriptionCommand(id));

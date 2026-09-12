@@ -1,8 +1,11 @@
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.IdentityModel.Tokens;
 using SmartShop.API.Middleware;
 using SmartShop.Application;
+using SmartShop.Domain.Entities;
+using SmartShop.Domain.Interfaces.Repositories;
 using SmartShop.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -68,6 +71,30 @@ app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+
+await SeedAdminUserAsync(app);
+
 app.Run();
+
+static async Task SeedAdminUserAsync(WebApplication app)
+{
+    var adminEmail = app.Configuration["AdminSeed:Email"];
+    var adminPassword = app.Configuration["AdminSeed:Password"];
+
+    if (string.IsNullOrWhiteSpace(adminEmail) || string.IsNullOrWhiteSpace(adminPassword))
+        return;
+
+    using var scope = app.Services.CreateScope();
+    var userRepository = scope.ServiceProvider.GetRequiredService<IUserRepository>();
+
+    if (await userRepository.ExistsAsync(adminEmail))
+        return;
+
+    var passwordHasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher<object>>();
+    var passwordHash = passwordHasher.HashPassword(new object(), adminPassword);
+
+    var admin = User.CreateAdmin(adminEmail, passwordHash, "Admin", "Admin");
+    await userRepository.AddAsync(admin);
+}
 
 public partial class Program { }

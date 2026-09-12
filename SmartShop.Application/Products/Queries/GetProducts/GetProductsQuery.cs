@@ -3,4 +3,4 @@ using SmartShop.Application.Common.DTOs;
 
 namespace SmartShop.Application.Products.Queries.GetProducts;
 
-public record GetProductsQuery() : IRequest<IEnumerable<ProductDto>>;
+public record GetProductsQuery(int PageNumber = 1, int PageSize = 10) : IRequest<PagedResult<ProductDto>>;

@@ -26,4 +26,14 @@ public class User
             CreatedAt = DateTime.UtcNow
         };
     }
+
+    public static User CreateAdmin(string email, string passwordHash,
+                                   string firstName, string lastName)
+    {
+        var user = Create(email, passwordHash, firstName, lastName);
+        user.Role = "Admin";
+        return user;
+    }
+
+    public void PromoteToAdmin() => Role = "Admin";
 }

@@ -19,6 +19,20 @@ public class ProductRepository : IProductRepository
     public async Task<IEnumerable<Product>> GetAllAsync() =>
         await _context.Products.Where(p => p.IsActive).ToListAsync();
 
+    public async Task<(IEnumerable<Product> Items, int TotalCount)> GetPagedAsync(int pageNumber, int pageSize)
+    {
+        var query = _context.Products.Where(p => p.IsActive).OrderBy(p => p.Name);
+
+        var totalCount = await query.CountAsync();
+
+        var items = await query
+            .Skip((pageNumber - 1) * pageSize)
+            .Take(pageSize)
+            .ToListAsync();
+
+        return (items, totalCount);
+    }
+
     public async Task<IEnumerable<Product>> GetByCategoryAsync(string category) =>
         await _context.Products
             .Where(p => p.IsActive && p.Category == category)
