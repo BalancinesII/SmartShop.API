@@ -64,7 +64,12 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(AngularDevCorsPolicy, policy =>
     {
-        policy.WithOrigins("http://localhost:4200")
+        // En desarrollo, Angular puede arrancar en distintos puertos si el 4200
+        // está ocupado (4201, 62655, etc.). Permitimos cualquier puerto de
+        // localhost en vez de fijar uno solo para no romper esto cada vez.
+        policy.SetIsOriginAllowed(origin =>
+                  Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+                  (uri.Host == "localhost" || uri.Host == "127.0.0.1"))
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
