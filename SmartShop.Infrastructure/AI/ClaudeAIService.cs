@@ -30,6 +30,7 @@ public class ClaudeAIService : IAIService
 
                 The description should be 2 to 3 sentences, highlight the main benefits,
                 and use a persuasive but honest tone.
+                Always write the description in English, regardless of the product name's language.
                 Reply with the description only, no titles or extra formatting.
                 """)
         };
