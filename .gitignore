@@ -17,3 +17,5 @@
 
 # Docker env file with secrets
 .env
+
+.claude/
