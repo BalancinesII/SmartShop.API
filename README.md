@@ -1,18 +1,23 @@
 # SmartShop API
 
-ASP.NET Core 8 REST API for an ecommerce platform with AI-powered features using the Anthropic Claude API.
+ASP.NET Core 8 REST API for an ecommerce platform with AI-powered features using the Anthropic Claude API. Deployed live on Azure, with a companion Angular frontend.
+
+🔗 **Live demo:** [smartshop-api-nachosaiz](https://smartshop-api-nachosaiz-d2fvhhgfgwdkc5cc.swedencentral-01.azurewebsites.net/api/Products) · Frontend: [SmartShop.Web](https://github.com/BalancinesII/SmartShop.Web) → [live app](https://ashy-bush-06c228b03.5.azurestaticapps.net)
 
 ## Features
 
 - **AI product descriptions** — automatically generates compelling product descriptions using Claude
 - **AI customer support chatbot** — multi-turn conversational assistant with persistent chat history and real product catalog context
-- **JWT authentication** — register and login with token-based auth
-- **Full product CRUD** — create, read, update and delete products
+- **JWT authentication with roles** — Admin/Customer role-based access control on all write operations
+- **Full product CRUD** — create, read, update and delete products, with pagination on listing
+- **Resilient database access** — automatic retry on transient SQL failures (e.g. serverless database auto-resume)
+- **Automatic migrations** — schema is applied on startup, no manual step needed on a fresh database
 - **Input validation** — FluentValidation pipeline with descriptive error messages
 - **Global exception handling** — consistent error responses across all endpoints
 - **Clean Architecture** — domain-centric design with clear separation of concerns
 - **CQRS with MediatR** — every use case is an isolated, testable handler
-- **13 automated tests** — unit and integration test coverage
+- **14 automated tests** — unit and integration test coverage
+- **CI/CD on Azure** — every push to `master` builds and deploys automatically via GitHub Actions
 
 ## Tech stack
 
@@ -24,8 +29,11 @@ ASP.NET Core 8 REST API for an ecommerce platform with AI-powered features using
 | CQRS | MediatR |
 | Validation | FluentValidation |
 | Auth | JWT Bearer |
-| Docs | Swagger / OpenAPI |
+| Docs | Swagger / OpenAPI (Development only) |
 | Tests | xUnit + Moq + FluentAssertions |
+| Hosting | Azure App Service (Free tier) + Azure SQL (Free offer) |
+| CI/CD | GitHub Actions |
+| Frontend | Angular 18 + Material ([SmartShop.Web](https://github.com/BalancinesII/SmartShop.Web)) |
 
 ## Architecture
 
@@ -43,19 +51,20 @@ Dependency rule: outer layers depend on inner layers, never the reverse.
 ## Endpoints
 
 ### Auth
-| Method | Endpoint | Description |
-|---|---|---|
-| POST | `/api/Auth/register` | Register a new user |
-| POST | `/api/Auth/login` | Login and get JWT token |
+| Method | Endpoint | Auth | Description |
+|---|---|---|---|
+| POST | `/api/Auth/register` | — | Register a new user (role: Customer) |
+| POST | `/api/Auth/login` | — | Login and get JWT token |
+| PUT | `/api/Auth/{id}/promote` | ✅ Admin | Promote a user to Admin |
 
 ### Products
 | Method | Endpoint | Auth | Description |
 |---|---|---|---|
-| GET | `/api/Products` | — | Get all active products |
-| POST | `/api/Products` | — | Create a product |
-| PUT | `/api/Products/{id}` | ✅ | Update a product |
-| DELETE | `/api/Products/{id}` | ✅ | Delete a product |
-| POST | `/api/Products/{id}/describe` | ✅ | Generate AI description |
+| GET | `/api/Products?pageNumber=&pageSize=` | — | Get paginated active products (max 50/page) |
+| POST | `/api/Products` | ✅ Admin | Create a product |
+| PUT | `/api/Products/{id}` | ✅ Admin | Update a product |
+| DELETE | `/api/Products/{id}` | ✅ Admin | Delete a product |
+| POST | `/api/Products/{id}/describe` | ✅ Admin | Generate AI description |
 
 ### Chat
 | Method | Endpoint | Description |
@@ -90,21 +99,21 @@ cd SmartShop.API
     "Key": "your-secret-key-min-32-characters",
     "Issuer": "SmartShop.API",
     "Audience": "SmartShop.Client"
+  },
+  "AdminSeed": {
+    "Email": "admin@example.com",
+    "Password": "a-strong-password"
   }
 }
 ```
+`AdminSeed` creates one Admin user on startup if it doesn't already exist — needed since new users always register as `Customer`, and only an existing Admin can promote others.
 
-3. Apply database migrations
-```bash
-dotnet ef database update --project SmartShop.Infrastructure --startup-project SmartShop.API
-```
-
-4. Run the API
+3. Run the API — database migrations are applied automatically on startup, no manual `dotnet ef database update` needed
 ```bash
 dotnet run --project SmartShop.API
 ```
 
-5. Open Swagger at `https://localhost:7024/swagger`
+4. Open Swagger at `https://localhost:7024/swagger` (Development environment only)
 
 ### Running tests
 ```bash
@@ -119,17 +128,30 @@ Sends product name, category and price to Claude and returns a 2-3 sentence pers
 ### Customer support chatbot
 Maintains conversation history per session stored in SQL Server. Each request includes the last 10 messages as context and the full product catalog so Claude can answer questions about real inventory, prices and availability.
 
+## Deployment
+
+Runs on Azure entirely on free tiers:
+
+- **App Service (F1 Free)** — hosts the API
+- **Azure SQL (Free offer)** — 32GB storage, 100k vCore-seconds/month; the database auto-pauses when idle and resumes on the next request (handled transparently via `EnableRetryOnFailure`)
+- **Static Web Apps (Free)** — hosts the [Angular frontend](https://github.com/BalancinesII/SmartShop.Web)
+- **GitHub Actions** — pushing to `master` triggers build + deploy automatically for both repos
+
+CORS is configured to allow any `localhost` port (for local frontend development) plus the deployed Static Web App origin.
+
 ## Project status
 
 - [x] Clean Architecture with 4 layers
 - [x] CQRS with MediatR
-- [x] EF Core + SQL Server
-- [x] JWT Authentication
+- [x] EF Core + SQL Server, with automatic migrations on startup
+- [x] JWT Authentication with Admin/Customer roles
+- [x] Pagination
 - [x] AI product descriptions
 - [x] AI chatbot with product catalog context
 - [x] Input validation with FluentValidation
 - [x] Global exception handling
-- [x] Unit and integration tests
-- [ ] Role-based authorization (Admin / Customer)
-- [ ] Pagination
-- [ ] Azure deployment with CI/CD
+- [x] Unit and integration tests (14)
+- [x] Angular frontend
+- [x] Azure deployment with CI/CD
+- [ ] Automated tests for the frontend
+- [ ] Rate limiting on AI endpoints
