@@ -35,7 +35,7 @@ public class CreateProductHandlerTests
         result.Name.Should().Be("Performance T-Shirt");
         result.Price.Should().Be(29.99m);
         result.Stock.Should().Be(100);
-        result.Category.Should().Be("Ropa");
+        result.Category.Should().Be("Clothing");
         result.IsActive.Should().BeTrue();
         result.Id.Should().NotBeEmpty();
     }
