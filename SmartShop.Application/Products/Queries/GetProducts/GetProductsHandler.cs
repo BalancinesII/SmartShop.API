@@ -30,6 +30,7 @@ public class GetProductsHandler : IRequestHandler<GetProductsQuery, PagedResult<
             Price = p.Price,
             Stock = p.Stock,
             Category = p.Category,
+            ImageUrl = p.ImageUrl,
             IsActive = p.IsActive
         });
 

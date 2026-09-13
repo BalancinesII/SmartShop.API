@@ -19,5 +19,13 @@ public class CreateProductValidator : AbstractValidator<CreateProductCommand>
         RuleFor(x => x.Category)
             .NotEmpty().WithMessage("Category is required.")
             .MaximumLength(100).WithMessage("Category cannot exceed 100 characters.");
+
+        RuleFor(x => x.ImageUrl)
+            .Must(BeAValidUrl).When(x => !string.IsNullOrWhiteSpace(x.ImageUrl))
+            .WithMessage("Image URL must be a valid absolute URL.");
     }
+
+    private static bool BeAValidUrl(string? url) =>
+        Uri.TryCreate(url, UriKind.Absolute, out var result) &&
+        (result.Scheme == Uri.UriSchemeHttp || result.Scheme == Uri.UriSchemeHttps);
 }

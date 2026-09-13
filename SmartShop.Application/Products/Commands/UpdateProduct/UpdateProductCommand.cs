@@ -8,4 +8,5 @@ public record UpdateProductCommand(
     string Name,
     decimal Price,
     int Stock,
-    string Category) : IRequest<ProductDto>;
+    string Category,
+    string? ImageUrl = null) : IRequest<ProductDto>;

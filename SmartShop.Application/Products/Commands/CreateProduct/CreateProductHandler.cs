@@ -21,7 +21,8 @@ public class CreateProductHandler : IRequestHandler<CreateProductCommand, Produc
             request.Name,
             request.Price,
             request.Stock,
-            request.Category);
+            request.Category,
+            request.ImageUrl);
 
         await _productRepository.AddAsync(product);
 
@@ -32,6 +33,7 @@ public class CreateProductHandler : IRequestHandler<CreateProductCommand, Produc
             Price = product.Price,
             Stock = product.Stock,
             Category = product.Category,
+            ImageUrl = product.ImageUrl,
             IsActive = product.IsActive
         };
     }

@@ -8,6 +8,7 @@ public class Product
     public decimal Price { get; private set; }
     public int Stock { get; private set; }
     public string Category { get; private set; } = string.Empty;
+    public string? ImageUrl { get; private set; }
     public bool IsActive { get; private set; }
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
@@ -15,7 +16,7 @@ public class Product
     // EF Core requires a parameterless constructor
     private Product() { }
 
-    public static Product Create(string name, decimal price, int stock, string category)
+    public static Product Create(string name, decimal price, int stock, string category, string? imageUrl = null)
     {
         return new Product
         {
@@ -24,6 +25,7 @@ public class Product
             Price = price,
             Stock = stock,
             Category = category,
+            ImageUrl = imageUrl,
             IsActive = true,
             CreatedAt = DateTime.UtcNow
         };
@@ -35,12 +37,13 @@ public class Product
         UpdatedAt = DateTime.UtcNow;
     }
 
-    public void Update(string name, decimal price, int stock, string category)
+    public void Update(string name, decimal price, int stock, string category, string? imageUrl = null)
     {
         Name = name;
         Price = price;
         Stock = stock;
         Category = category;
+        ImageUrl = imageUrl;
         UpdatedAt = DateTime.UtcNow;
     }
 }

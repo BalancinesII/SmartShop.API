@@ -21,7 +21,7 @@ public class UpdateProductHandler : IRequestHandler<UpdateProductCommand, Produc
         var product = await _productRepository.GetByIdAsync(request.Id)
             ?? throw new NotFoundException(nameof(Product), request.Id);
 
-        product.Update(request.Name, request.Price, request.Stock, request.Category);
+        product.Update(request.Name, request.Price, request.Stock, request.Category, request.ImageUrl);
         await _productRepository.UpdateAsync(product);
 
         return new ProductDto
@@ -32,6 +32,7 @@ public class UpdateProductHandler : IRequestHandler<UpdateProductCommand, Produc
             Price = product.Price,
             Stock = product.Stock,
             Category = product.Category,
+            ImageUrl = product.ImageUrl,
             IsActive = product.IsActive
         };
     }
