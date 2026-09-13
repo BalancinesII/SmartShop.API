@@ -30,8 +30,8 @@ public class SendMessageHandlerTests
     {
         // Arrange
         var sessionId = Guid.NewGuid();
-        var userMessage = "Hola, tenéis zapatillas?";
-        var expectedResponse = "Sí, tenemos zapatillas de running.";
+        var userMessage = "Hi, do you have any sneakers?";
+        var expectedResponse = "Yes, we have running sneakers.";
 
         _chatRepositoryMock
             .Setup(r => r.GetSessionMessagesAsync(sessionId))

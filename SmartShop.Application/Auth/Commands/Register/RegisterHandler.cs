@@ -26,7 +26,7 @@ public class RegisterHandler : IRequestHandler<RegisterCommand, AuthResponseDto>
                                                CancellationToken cancellationToken)
     {
         if (await _userRepository.ExistsAsync(request.Email))
-            throw new InvalidOperationException("El email ya está registrado.");
+            throw new InvalidOperationException("This email is already registered.");
 
         var passwordHash = _passwordHasher.HashPassword(new object(), request.Password);
 

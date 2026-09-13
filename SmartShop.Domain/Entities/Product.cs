@@ -12,7 +12,7 @@ public class Product
     public DateTime CreatedAt { get; private set; }
     public DateTime? UpdatedAt { get; private set; }
 
-    // EF Core necesita un constructor sin parámetros
+    // EF Core requires a parameterless constructor
     private Product() { }
 
     public static Product Create(string name, decimal price, int stock, string category)

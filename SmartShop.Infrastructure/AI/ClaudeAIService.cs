@@ -22,15 +22,15 @@ public class ClaudeAIService : IAIService
         {
             new Message(RoleType.User,
                 $"""
-                Genera una descripción de producto atractiva y concisa para una tienda online.
-                
-                Producto: {productName}
-                Categoría: {category}
-                Precio: {price:C}
-                
-                La descripción debe tener entre 2 y 3 frases, destacar los beneficios 
-                principales y usar un tono persuasivo pero honesto.
-                Responde solo con la descripción, sin títulos ni formato adicional.
+                Generate an attractive, concise product description for an online store.
+
+                Product: {productName}
+                Category: {category}
+                Price: {price:C}
+
+                The description should be 2 to 3 sentences, highlight the main benefits,
+                and use a persuasive but honest tone.
+                Reply with the description only, no titles or extra formatting.
                 """)
         };
 
@@ -62,8 +62,8 @@ public class ClaudeAIService : IAIService
 
         var productCatalog = availableProducts.Any()
             ? string.Join("\n", availableProducts.Select(p =>
-                $"- {p.Name} | Categoría: {p.Category} | Precio: {p.Price:C} | Stock: {p.Stock}"))
-            : "No hay productos disponibles en este momento.";
+                $"- {p.Name} | Category: {p.Category} | Price: {p.Price:C} | Stock: {p.Stock}"))
+            : "No products are available at the moment.";
 
         var request = new MessageParameters
         {
@@ -73,16 +73,16 @@ public class ClaudeAIService : IAIService
         {
             new SystemMessage(
                 $"""
-                Eres el asistente virtual de SmartShop, una tienda online.
-                Ayudas a los clientes con preguntas sobre productos, pedidos y devoluciones.
-                Responde siempre en el idioma del cliente.
-                Sé amable, conciso y útil. Si no sabes algo, dilo con honestidad.
+                You are the virtual assistant for SmartShop, an online store.
+                You help customers with questions about products, orders and returns.
+                Always reply in the customer's language.
+                Be friendly, concise and helpful. If you don't know something, say so honestly.
 
-                CATÁLOGO DE PRODUCTOS DISPONIBLES:
+                AVAILABLE PRODUCT CATALOG:
                 {productCatalog}
 
-                Usa esta información para responder preguntas sobre disponibilidad,
-                precios y categorías. No inventes productos que no estén en el catálogo.
+                Use this information to answer questions about availability,
+                prices and categories. Do not invent products that are not in the catalog.
                 """)
         },
             Messages = messages

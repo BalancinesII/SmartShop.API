@@ -25,13 +25,13 @@ public class LoginHandler : IRequestHandler<LoginCommand, AuthResponseDto>
                                                CancellationToken cancellationToken)
     {
         var user = await _userRepository.GetByEmailAsync(request.Email)
-            ?? throw new UnauthorizedAccessException("Credenciales inválidas.");
+            ?? throw new UnauthorizedAccessException("Invalid credentials.");
 
         var result = _passwordHasher.VerifyHashedPassword(
             new object(), user.PasswordHash, request.Password);
 
         if (result == PasswordVerificationResult.Failed)
-            throw new UnauthorizedAccessException("Credenciales inválidas.");
+            throw new UnauthorizedAccessException("Invalid credentials.");
 
         return new AuthResponseDto
         {

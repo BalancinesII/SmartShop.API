@@ -24,7 +24,7 @@ builder.Services.AddSwaggerGen(c =>
         Scheme = "Bearer",
         BearerFormat = "JWT",
         In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Introduce el token JWT: Bearer {token}"
+        Description = "Enter the JWT token: Bearer {token}"
     });
     c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
     {
@@ -61,10 +61,10 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
-// Rate limiting para los endpoints de IA (generar descripción + chat), que
-// llaman a la API de Anthropic y por tanto cuestan dinero en cada petición.
-// Limita por IP para evitar que un abuso dispare la factura. Configurable
-// desde appsettings ("RateLimiting"). Valores por defecto: 20 req / 60s.
+// Rate limiting for the AI endpoints (generate description + chat), which call
+// the Anthropic API and therefore cost money on every request. Limits per IP to
+// stop abuse from running up the bill. Configurable via appsettings
+// ("RateLimiting"). Defaults: 20 req / 60s.
 var aiPermitLimit = builder.Configuration.GetValue("RateLimiting:AiPermitLimit", 20);
 var aiWindowSeconds = builder.Configuration.GetValue("RateLimiting:AiWindowSeconds", 60);
 
@@ -88,9 +88,9 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(AngularDevCorsPolicy, policy =>
     {
-        // Orígenes de producción configurables desde appsettings ("Cors:AllowedOrigins")
-        // — así el comprador pone su propia URL de frontend sin tocar código.
-        // En desarrollo, cualquier puerto de localhost se permite siempre.
+        // Production origins are configurable via appsettings ("Cors:AllowedOrigins")
+        // — so the buyer sets their own frontend URL without touching code.
+        // In development, any localhost port is always allowed.
         var allowedOrigins = builder.Configuration
             .GetSection("Cors:AllowedOrigins")
             .Get<string[]>() ?? Array.Empty<string>();
@@ -126,11 +126,10 @@ app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
 
-// Aplica las migraciones pendientes al arrancar. Igual que con el seed del
-// Admin, no debe tumbar la app si falla (p. ej. la base de datos aún está
-// despertando) — simplemente lo registramos y la API sigue sirviendo lo que
-// pueda; en el próximo arranque (o la próxima vez que EnableRetryOnFailure
-// reintente) se aplicará igualmente.
+// Apply pending migrations on startup. Like the Admin seed, this must not bring
+// the app down if it fails (e.g. the database is still waking up) — we just log
+// it and the API keeps serving what it can; it'll be applied on the next startup
+// (or the next time EnableRetryOnFailure retries).
 try
 {
     using var migrationScope = app.Services.CreateScope();
@@ -139,21 +138,20 @@ try
 }
 catch (Exception ex)
 {
-    app.Logger.LogError(ex, "No se pudieron aplicar las migraciones al arrancar.");
+    app.Logger.LogError(ex, "Failed to apply migrations on startup.");
 }
 
-// El seed del Admin no debe impedir que la API arranque: si la base de datos
-// está "despertando" (tier gratuito serverless) o hay cualquier otro fallo
-// transitorio, lo registramos y dejamos que la app siga sirviendo peticiones
-// con normalidad (EnableRetryOnFailure ya cubre la mayoría de estos casos,
-// esto es una red de seguridad adicional).
+// Seeding the Admin user must not prevent the API from starting: if the database
+// is waking up (free serverless tier) or any other transient failure occurs, we
+// log it and let the app keep serving requests normally (EnableRetryOnFailure
+// already covers most of these cases; this is an extra safety net).
 try
 {
     await SeedAdminUserAsync(app);
 }
 catch (Exception ex)
 {
-    app.Logger.LogError(ex, "No se pudo sembrar el usuario Admin al arrancar. La app continúa sin él.");
+    app.Logger.LogError(ex, "Failed to seed the Admin user on startup. The app continues without it.");
 }
 
 app.Run();

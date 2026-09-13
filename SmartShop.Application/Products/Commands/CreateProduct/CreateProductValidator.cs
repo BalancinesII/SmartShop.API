@@ -7,17 +7,17 @@ public class CreateProductValidator : AbstractValidator<CreateProductCommand>
     public CreateProductValidator()
     {
         RuleFor(x => x.Name)
-            .NotEmpty().WithMessage("El nombre es obligatorio.")
-            .MaximumLength(200).WithMessage("El nombre no puede superar 200 caracteres.");
+            .NotEmpty().WithMessage("Name is required.")
+            .MaximumLength(200).WithMessage("Name cannot exceed 200 characters.");
 
         RuleFor(x => x.Price)
-            .GreaterThan(0).WithMessage("El precio debe ser mayor que 0.");
+            .GreaterThan(0).WithMessage("Price must be greater than 0.");
 
         RuleFor(x => x.Stock)
-            .GreaterThanOrEqualTo(0).WithMessage("El stock no puede ser negativo.");
+            .GreaterThanOrEqualTo(0).WithMessage("Stock cannot be negative.");
 
         RuleFor(x => x.Category)
-            .NotEmpty().WithMessage("La categoría es obligatoria.")
-            .MaximumLength(100).WithMessage("La categoría no puede superar 100 caracteres.");
+            .NotEmpty().WithMessage("Category is required.")
+            .MaximumLength(100).WithMessage("Category cannot exceed 100 characters.");
     }
 }

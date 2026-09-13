@@ -21,7 +21,7 @@ public class CreateProductHandlerTests
     public async Task Handle_ValidCommand_ReturnsProductDto()
     {
         // Arrange
-        var command = new CreateProductCommand("Camiseta Técnica", 29.99m, 100, "Ropa");
+        var command = new CreateProductCommand("Performance T-Shirt", 29.99m, 100, "Clothing");
 
         _repositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Product>()))
@@ -32,7 +32,7 @@ public class CreateProductHandlerTests
 
         // Assert
         result.Should().NotBeNull();
-        result.Name.Should().Be("Camiseta Técnica");
+        result.Name.Should().Be("Performance T-Shirt");
         result.Price.Should().Be(29.99m);
         result.Stock.Should().Be(100);
         result.Category.Should().Be("Ropa");
@@ -44,7 +44,7 @@ public class CreateProductHandlerTests
     public async Task Handle_ValidCommand_CallsRepositoryOnce()
     {
         // Arrange
-        var command = new CreateProductCommand("Camiseta Técnica", 29.99m, 100, "Ropa");
+        var command = new CreateProductCommand("Performance T-Shirt", 29.99m, 100, "Clothing");
 
         _repositoryMock
             .Setup(r => r.AddAsync(It.IsAny<Product>()))

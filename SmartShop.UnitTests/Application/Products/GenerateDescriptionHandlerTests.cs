@@ -26,7 +26,7 @@ public class GenerateDescriptionHandlerTests
     {
         // Arrange
         var product = Product.Create("Zapatillas Pro", 89.99m, 50, "Calzado");
-        var expectedDescription = "Descripción generada por IA";
+        var expectedDescription = "AI-generated description";
 
         _repositoryMock
             .Setup(r => r.GetByIdAsync(product.Id))

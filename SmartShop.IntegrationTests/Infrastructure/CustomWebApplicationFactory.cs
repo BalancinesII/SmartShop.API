@@ -25,7 +25,7 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             if (descriptor != null)
                 services.Remove(descriptor);
 
-            // Añadir DbContext en memoria
+            // Add in-memory DbContext
             services.AddDbContext<SmartShopDbContext>(options =>
                 options.UseInMemoryDatabase("TestDb"));
 
