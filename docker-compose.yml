@@ -1,0 +1,44 @@
+services:
+  db:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: smartshop-db
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "Your_strong_Password123"  # change me
+    ports:
+      - "1433:1433"
+    volumes:
+      - smartshop-data:/var/opt/mssql
+    healthcheck:
+      # Wait until SQL Server actually accepts connections before starting the API,
+      # so migrations on startup don't fail on a not-yet-ready database.
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartshop-api
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      # ASP.NET Core reads nested config from env vars using '__' as the separator.
+      ASPNETCORE_ENVIRONMENT: "Docker"
+      ConnectionStrings__DefaultConnection: "Server=db,1433;Database=SmartShopDb;User Id=sa;Password=Your_strong_Password123;Encrypt=True;TrustServerCertificate=True;"
+      Claude__ApiKey: "${CLAUDE_API_KEY}"                       # set in a .env file next to this compose
+      Jwt__Key: "docker-dev-secret-change-me-min-32-characters"
+      Jwt__Issuer: "SmartShop.API"
+      Jwt__Audience: "SmartShop.Client"
+      AdminSeed__Email: "admin@smartshop.local"
+      AdminSeed__Password: "Admin123!"
+      # Allow a locally-run Angular dev server to call the containerized API.
+      Cors__AllowedOrigins__0: "http://localhost:4200"
+
+volumes:
+  smartshop-data:

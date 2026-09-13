@@ -128,6 +128,20 @@ Sends product name, category and price to Claude and returns a 2-3 sentence pers
 ### Customer support chatbot
 Maintains conversation history per session stored in SQL Server. Each request includes the last 10 messages as context and the full product catalog so Claude can answer questions about real inventory, prices and availability.
 
+## Run with Docker
+
+The fastest way to get the full backend running — no need to install .NET or SQL Server locally. Requires only Docker.
+
+1. Copy `.env.example` to `.env` and add your Anthropic API key.
+2. From the repo root:
+```bash
+docker-compose up --build
+```
+
+This spins up SQL Server and the API together. The API waits for the database to be ready, applies migrations automatically, and seeds an Admin user (`admin@smartshop.local` / `Admin123!`). The API is then available at `http://localhost:8080/api/Products`.
+
+The Angular frontend lives in a [separate repo](https://github.com/BalancinesII/SmartShop.Web) — run it with `npm start` and it will talk to the containerized API (CORS already allows `http://localhost:4200`).
+
 ## Deployment
 
 Runs on Azure entirely on free tiers:

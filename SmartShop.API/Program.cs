@@ -113,7 +113,13 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseMiddleware<ExceptionMiddleware>();
-app.UseHttpsRedirection();
+
+// HTTPS redirection is skipped inside containers (the container only exposes
+// HTTP on 8080; TLS is terminated by the reverse proxy / cloud host in front).
+if (!app.Environment.IsEnvironment("Docker"))
+{
+    app.UseHttpsRedirection();
+}
 app.UseCors(AngularDevCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
