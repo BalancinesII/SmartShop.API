@@ -15,6 +15,7 @@
     </PackageReference>
     <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" Version="8.0.0" />
     <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="8.0.25" />
+    <PackageReference Include="Stripe.net" Version="47.4.0" />
   </ItemGroup>
 
   <ItemGroup>

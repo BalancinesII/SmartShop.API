@@ -43,6 +43,9 @@ public static class DependencyInjection
         services.AddScoped<IJwtService, JwtService>();
         services.AddScoped<IPasswordHasher<object>, PasswordHasher<object>>();
 
+        // Payments (Stripe)
+        services.AddScoped<IPaymentService, Payments.StripePaymentService>();
+
         return services;
     }
 }

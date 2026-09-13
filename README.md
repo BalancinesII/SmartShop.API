@@ -71,6 +71,12 @@ Dependency rule: outer layers depend on inner layers, never the reverse.
 |---|---|---|
 | POST | `/api/Chat/message` | Send a message to the AI assistant |
 
+### Payments (Stripe)
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/Payments/checkout` | Create a Stripe Checkout session for a product; returns the payment URL |
+| POST | `/api/Payments/webhook` | Stripe calls this to confirm completed payments (signature-verified) |
+
 ## Getting started
 
 ### Prerequisites
@@ -128,6 +134,17 @@ Sends product name, category and price to Claude and returns a 2-3 sentence pers
 ### Customer support chatbot
 Maintains conversation history per session stored in SQL Server. Each request includes the last 10 messages as context and the full product catalog so Claude can answer questions about real inventory, prices and availability.
 
+## Payments (Stripe)
+
+Product checkout uses [Stripe Checkout](https://stripe.com/docs/payments/checkout) — the hosted payment page, so card details never touch this server.
+
+1. Add your test keys to config (`Stripe:SecretKey`, starting with `sk_test_`).
+2. `POST /api/Payments/checkout` with `{ "productId": "...", "quantity": 1 }` returns a `checkoutUrl` — redirect the customer there.
+3. Pay with Stripe's test card `4242 4242 4242 4242` (any future expiry, any CVC).
+4. To receive confirmation events locally, run the [Stripe CLI](https://stripe.com/docs/stripe-cli): `stripe listen --forward-to localhost:7024/api/Payments/webhook`, and put the printed `whsec_...` secret in `Stripe:WebhookSecret`.
+
+The webhook handler logs completed payments — wire in your own order creation / stock update / email logic where indicated in `PaymentsController.Webhook`.
+
 ## Run with Docker
 
 The fastest way to get the full backend running — no need to install .NET or SQL Server locally. Requires only Docker.
@@ -167,5 +184,7 @@ CORS is configured to allow any `localhost` port (for local frontend development
 - [x] Unit and integration tests (14)
 - [x] Angular frontend
 - [x] Azure deployment with CI/CD
+- [x] Docker / docker-compose for local dev
+- [x] Rate limiting on AI endpoints
+- [x] Stripe checkout integration
 - [ ] Automated tests for the frontend
-- [ ] Rate limiting on AI endpoints
