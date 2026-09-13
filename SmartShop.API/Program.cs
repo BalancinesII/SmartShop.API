@@ -66,12 +66,14 @@ builder.Services.AddCors(options =>
 {
     options.AddPolicy(AngularDevCorsPolicy, policy =>
     {
-        // En desarrollo, Angular puede arrancar en distintos puertos si el 4200
-        // está ocupado (4201, 62655, etc.). Permitimos cualquier puerto de
-        // localhost en vez de fijar uno solo para no romper esto cada vez.
+        // Localhost (cualquier puerto) para desarrollo local, más el dominio
+        // real del frontend en Azure Static Web Apps para producción.
+        const string staticWebAppOrigin = "https://ashy-bush-06c228b03.5.azurestaticapps.net";
+
         policy.SetIsOriginAllowed(origin =>
-                  Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
-                  (uri.Host == "localhost" || uri.Host == "127.0.0.1"))
+                  origin == staticWebAppOrigin ||
+                  (Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
+                   (uri.Host == "localhost" || uri.Host == "127.0.0.1")))
               .AllowAnyHeader()
               .AllowAnyMethod();
     });
