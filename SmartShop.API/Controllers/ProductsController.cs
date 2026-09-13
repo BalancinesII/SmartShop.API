@@ -1,6 +1,7 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SmartShop.Application.Products.Commands.CreateProduct;
 using SmartShop.Application.Products.Commands.DeleteProduct;
 using SmartShop.Application.Products.Commands.GenerateDescription;
@@ -56,6 +57,7 @@ public class ProductsController : ControllerBase
 
     [HttpPost("{id}/describe")]
     [Authorize(Roles = "Admin")]
+    [EnableRateLimiting("ai")]
     public async Task<IActionResult> GenerateDescription(Guid id)
     {
         var description = await _mediator.Send(new GenerateDescriptionCommand(id));

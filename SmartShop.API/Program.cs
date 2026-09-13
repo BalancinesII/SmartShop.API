@@ -1,4 +1,5 @@
 using System.Text;
+using System.Threading.RateLimiting;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -60,18 +61,42 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddApplication();
 builder.Services.AddInfrastructure(builder.Configuration);
 
+// Rate limiting para los endpoints de IA (generar descripción + chat), que
+// llaman a la API de Anthropic y por tanto cuestan dinero en cada petición.
+// Limita por IP para evitar que un abuso dispare la factura. Configurable
+// desde appsettings ("RateLimiting"). Valores por defecto: 20 req / 60s.
+var aiPermitLimit = builder.Configuration.GetValue("RateLimiting:AiPermitLimit", 20);
+var aiWindowSeconds = builder.Configuration.GetValue("RateLimiting:AiWindowSeconds", 60);
+
+builder.Services.AddRateLimiter(options =>
+{
+    options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+    options.AddPolicy("ai", httpContext =>
+        RateLimitPartition.GetFixedWindowLimiter(
+            partitionKey: httpContext.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+            factory: _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = aiPermitLimit,
+                Window = TimeSpan.FromSeconds(aiWindowSeconds)
+            }));
+});
+
 const string AngularDevCorsPolicy = "AngularDev";
 
 builder.Services.AddCors(options =>
 {
     options.AddPolicy(AngularDevCorsPolicy, policy =>
     {
-        // Localhost (cualquier puerto) para desarrollo local, más el dominio
-        // real del frontend en Azure Static Web Apps para producción.
-        const string staticWebAppOrigin = "https://ashy-bush-06c228b03.5.azurestaticapps.net";
+        // Orígenes de producción configurables desde appsettings ("Cors:AllowedOrigins")
+        // — así el comprador pone su propia URL de frontend sin tocar código.
+        // En desarrollo, cualquier puerto de localhost se permite siempre.
+        var allowedOrigins = builder.Configuration
+            .GetSection("Cors:AllowedOrigins")
+            .Get<string[]>() ?? Array.Empty<string>();
 
         policy.SetIsOriginAllowed(origin =>
-                  origin == staticWebAppOrigin ||
+                  allowedOrigins.Contains(origin) ||
                   (Uri.TryCreate(origin, UriKind.Absolute, out var uri) &&
                    (uri.Host == "localhost" || uri.Host == "127.0.0.1")))
               .AllowAnyHeader()
@@ -92,6 +117,7 @@ app.UseHttpsRedirection();
 app.UseCors(AngularDevCorsPolicy);
 app.UseAuthentication();
 app.UseAuthorization();
+app.UseRateLimiter();
 app.MapControllers();
 
 // Aplica las migraciones pendientes al arrancar. Igual que con el seed del

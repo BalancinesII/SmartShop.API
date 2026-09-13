@@ -1,5 +1,6 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.RateLimiting;
 using SmartShop.Application.Chat.Commands.SendMessage;
 
 namespace SmartShop.API.Controllers;
@@ -16,6 +17,7 @@ public class ChatController : ControllerBase
     }
 
     [HttpPost("message")]
+    [EnableRateLimiting("ai")]
     public async Task<IActionResult> SendMessage([FromBody] SendMessageCommand command)
     {
         var response = await _mediator.Send(command);
