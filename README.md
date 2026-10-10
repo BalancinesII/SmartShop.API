@@ -11,13 +11,14 @@ ASP.NET Core 8 REST API for an ecommerce platform with AI-powered features using
 - **JWT authentication with roles** — Admin/Customer role-based access control on all write operations
 - **Full product CRUD** — create, read, update and delete products, with pagination on listing
 - **Resilient database access** — automatic retry on transient SQL failures (e.g. serverless database auto-resume)
-- **Automatic migrations** — schema is applied on startup, no manual step needed on a fresh database
-- **Input validation** — FluentValidation pipeline with descriptive error messages
+- **Automatic migrations** — schema is applied in the background right after startup, so the API starts serving immediately even if the database is still waking up
+- **Input validation** — FluentValidation pipeline with descriptive error messages (including a length cap on chat messages to keep AI costs bounded)
 - **Global exception handling** — consistent error responses across all endpoints
 - **Clean Architecture** — domain-centric design with clear separation of concerns
 - **CQRS with MediatR** — every use case is an isolated, testable handler
-- **14 automated tests** — unit and integration test coverage
-- **CI/CD on Azure** — every push to `master` builds and deploys automatically via GitHub Actions
+- **25 automated tests** — unit and integration test coverage, self-contained (no local secrets needed)
+- **CI/CD on Azure** — every push to `master` runs the test suite, and only deploys if all tests pass
+- **Health check + keep-alive** — a database-free `/health` endpoint, pinged by a scheduled workflow so the free-tier API doesn't go cold
 
 ## Tech stack
 
@@ -71,6 +72,11 @@ Dependency rule: outer layers depend on inner layers, never the reverse.
 |---|---|---|
 | POST | `/api/Chat/message` | Send a message to the AI assistant |
 
+### Health
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/health` | Liveness check; doesn't touch the database |
+
 ### Payments (Stripe)
 | Method | Endpoint | Description |
 |---|---|---|
@@ -114,7 +120,7 @@ cd SmartShop.API
 ```
 `AdminSeed` creates one Admin user on startup if it doesn't already exist — needed since new users always register as `Customer`, and only an existing Admin can promote others.
 
-3. Run the API — database migrations are applied automatically on startup, no manual `dotnet ef database update` needed
+3. Run the API — database migrations are applied automatically right after startup, no manual `dotnet ef database update` needed
 ```bash
 dotnet run --project SmartShop.API
 ```
@@ -125,6 +131,7 @@ dotnet run --project SmartShop.API
 ```bash
 dotnet test
 ```
+The integration tests bring their own test configuration (JWT key, etc.) and use an in-memory database, so they run without `appsettings.Development.json` — exactly as they do in CI.
 
 ## AI integration
 
@@ -166,7 +173,7 @@ Runs on Azure entirely on free tiers:
 - **App Service (F1 Free)** — hosts the API
 - **Azure SQL (Free offer)** — 32GB storage, 100k vCore-seconds/month; the database auto-pauses when idle and resumes on the next request (handled transparently via `EnableRetryOnFailure`)
 - **Static Web Apps (Free)** — hosts the [Angular frontend](https://github.com/BalancinesII/SmartShop.Web)
-- **GitHub Actions** — pushing to `master` triggers build + deploy automatically for both repos
+- **GitHub Actions** — pushing to `master` runs the tests and deploys automatically; a scheduled `keep-alive` workflow pings `/health` every 10 minutes (Always On isn't available on F1), without waking up the database
 
 CORS is configured to allow any `localhost` port (for local frontend development) plus the deployed Static Web App origin.
 
@@ -181,7 +188,8 @@ CORS is configured to allow any `localhost` port (for local frontend development
 - [x] AI chatbot with product catalog context
 - [x] Input validation with FluentValidation
 - [x] Global exception handling
-- [x] Unit and integration tests (14)
+- [x] Unit and integration tests (25), run in CI before every deploy
+- [x] Health check and keep-alive for the free tier
 - [x] Angular frontend
 - [x] Azure deployment with CI/CD
 - [x] Docker / docker-compose for local dev
