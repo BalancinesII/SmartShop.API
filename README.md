@@ -1,6 +1,6 @@
 # SmartShop API
 
-ASP.NET Core 8 REST API for an ecommerce platform with AI-powered features using the Anthropic Claude API. Deployed live on Azure, with a companion Angular frontend.
+ASP.NET Core 10 REST API for an ecommerce platform with AI-powered features using the Anthropic Claude API. Deployed live on Azure, with a companion Angular frontend.
 
 🔗 **Live demo:** [smartshop-api-nachosaiz](https://smartshop-api-nachosaiz-d2fvhhgfgwdkc5cc.swedencentral-01.azurewebsites.net/api/Products) · Frontend: [SmartShop.Web](https://github.com/BalancinesII/SmartShop.Web) → [live app](https://ashy-bush-06c228b03.5.azurestaticapps.net)
 
@@ -35,8 +35,8 @@ Catalog with AI-generated descriptions and the shopping assistant:
 
 | Layer | Technology |
 |---|---|
-| Framework | ASP.NET Core 8 |
-| ORM | Entity Framework Core 8 + SQL Server |
+| Framework | ASP.NET Core 10 (.NET 10 LTS) |
+| ORM | Entity Framework Core 10 + SQL Server |
 | AI | Anthropic Claude API (`claude-sonnet-4-5`) |
 | CQRS | MediatR |
 | Validation | FluentValidation |
@@ -97,7 +97,7 @@ Dependency rule: outer layers depend on inner layers, never the reverse.
 ## Getting started
 
 ### Prerequisites
-- .NET 8 SDK
+- .NET 10 SDK
 - SQL Server or LocalDB (included with Visual Studio)
 - Anthropic API key — get one at [console.anthropic.com](https://console.anthropic.com)
 
