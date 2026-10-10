@@ -126,35 +126,41 @@ app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
 
-// Apply pending migrations on startup. Like the Admin seed, this must not bring
-// the app down if it fails (e.g. the database is still waking up) — we just log
-// it and the API keeps serving what it can; it'll be applied on the next startup
-// (or the next time EnableRetryOnFailure retries).
-try
-{
-    using var migrationScope = app.Services.CreateScope();
-    var db = migrationScope.ServiceProvider.GetRequiredService<SmartShop.Infrastructure.Persistence.SmartShopDbContext>();
-    await db.Database.MigrateAsync();
-}
-catch (Exception ex)
-{
-    app.Logger.LogError(ex, "Failed to apply migrations on startup.");
-}
+// Health check that does NOT touch the database. It's what the keep-alive
+// workflow pings: it keeps the App Service warm without waking up Azure SQL
+// (which would burn the free tier's monthly vCore-seconds).
+app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
-// Seeding the Admin user must not prevent the API from starting: if the database
-// is waking up (free serverless tier) or any other transient failure occurs, we
-// log it and let the app keep serving requests normally (EnableRetryOnFailure
-// already covers most of these cases; this is an extra safety net).
-try
-{
-    await SeedAdminUserAsync(app);
-}
-catch (Exception ex)
-{
-    app.Logger.LogError(ex, "Failed to seed the Admin user on startup. The app continues without it.");
-}
+// Migrations and the Admin seed run in the background once the API is already
+// accepting requests. Before, they ran before app.Run(): with the free Azure SQL
+// tier paused, EnableRetryOnFailure could hold the startup for a long time and
+// every visitor waited for it. Failures are logged and never bring the app down.
+app.Lifetime.ApplicationStarted.Register(() => _ = Task.Run(() => InitializeDatabaseAsync(app)));
 
 app.Run();
+
+static async Task InitializeDatabaseAsync(WebApplication app)
+{
+    try
+    {
+        using var migrationScope = app.Services.CreateScope();
+        var db = migrationScope.ServiceProvider.GetRequiredService<SmartShop.Infrastructure.Persistence.SmartShopDbContext>();
+        await db.Database.MigrateAsync();
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Failed to apply migrations on startup.");
+    }
+
+    try
+    {
+        await SeedAdminUserAsync(app);
+    }
+    catch (Exception ex)
+    {
+        app.Logger.LogError(ex, "Failed to seed the Admin user on startup. The app continues without it.");
+    }
+}
 
 static async Task SeedAdminUserAsync(WebApplication app)
 {
