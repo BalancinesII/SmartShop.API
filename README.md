@@ -4,6 +4,17 @@ ASP.NET Core 8 REST API for an ecommerce platform with AI-powered features using
 
 🔗 **Live demo:** [smartshop-api-nachosaiz](https://smartshop-api-nachosaiz-d2fvhhgfgwdkc5cc.swedencentral-01.azurewebsites.net/api/Products) · Frontend: [SmartShop.Web](https://github.com/BalancinesII/SmartShop.Web) → [live app](https://ashy-bush-06c228b03.5.azurestaticapps.net)
 
+![SmartShop storefront](docs/screenshots/storefront.png)
+
+<details>
+<summary>More screenshots</summary>
+
+Catalog with AI-generated descriptions and the shopping assistant:
+
+![Catalog and AI assistant](docs/screenshots/catalog-assistant.png)
+
+</details>
+
 ## Features
 
 - **AI product descriptions** — automatically generates compelling product descriptions using Claude
