@@ -2,8 +2,10 @@
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using SmartShop.Domain.Entities;
 using SmartShop.Infrastructure.Persistence;
 
@@ -33,12 +35,11 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
 
         builder.ConfigureServices(services =>
         {
-            // Eliminar el DbContext real
-            var descriptor = services.SingleOrDefault(
-                d => d.ServiceType == typeof(DbContextOptions<SmartShopDbContext>));
-
-            if (descriptor != null)
-                services.Remove(descriptor);
+            // Quitar el registro real de SQL Server. Desde EF Core 9, AddDbContext
+            // registra también IDbContextOptionsConfiguration<T>: si solo se borra
+            // DbContextOptions<T>, EF sigue viendo SQL Server junto a InMemory.
+            services.RemoveAll<DbContextOptions<SmartShopDbContext>>();
+            services.RemoveAll<IDbContextOptionsConfiguration<SmartShopDbContext>>();
 
             // Add in-memory DbContext
             services.AddDbContext<SmartShopDbContext>(options =>
