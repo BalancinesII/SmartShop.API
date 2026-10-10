@@ -39,6 +39,8 @@ services:
       AdminSeed__Password: "Admin123!"
       # Allow a locally-run Angular dev server to call the containerized API.
       Cors__AllowedOrigins__0: "http://localhost:4200"
+      # Where Stripe sends the customer back after paying (local frontend).
+      Stripe__FrontendBaseUrl: "http://localhost:4200"
 
 volumes:
   smartshop-data:

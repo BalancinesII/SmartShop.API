@@ -41,7 +41,7 @@ public class ProductsController : ControllerBase
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdateProductCommand command)
     {
         if (id != command.Id)
-            return BadRequest("El id de la ruta no coincide con el del body.");
+            return BadRequest(new { status = 400, error = "The route id does not match the id in the body." });
 
         var product = await _mediator.Send(command);
         return Ok(product);
