@@ -26,6 +26,10 @@ jobs:
       - name: Build with dotnet
         run: dotnet build SmartShop.API/SmartShop.API.csproj --configuration Release
 
+      # Si un test falla, el job se para aquí y no se despliega nada.
+      - name: Run tests
+        run: dotnet test SmartShop.API.sln --configuration Release
+
       - name: dotnet publish
         run: dotnet publish SmartShop.API/SmartShop.API.csproj -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
