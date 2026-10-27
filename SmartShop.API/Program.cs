@@ -126,9 +126,8 @@ app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
 
-// Health check that does NOT touch the database. It's what the keep-alive
-// workflow pings: it keeps the App Service warm without waking up Azure SQL
-// (which would burn the free tier's monthly vCore-seconds).
+// Health check that does NOT touch the database, so pinging it never wakes up
+// Azure SQL (which would burn the free tier's monthly vCore-seconds).
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 // Migrations and the Admin seed run in the background once the API is already
@@ -145,7 +144,12 @@ static async Task InitializeDatabaseAsync(WebApplication app)
     {
         using var migrationScope = app.Services.CreateScope();
         var db = migrationScope.ServiceProvider.GetRequiredService<SmartShop.Infrastructure.Persistence.SmartShopDbContext>();
-        await db.Database.MigrateAsync();
+
+        // Migrations only exist for relational providers. The integration tests
+        // swap in the InMemory provider, where MigrateAsync throws and logged a
+        // misleading error on every run.
+        if (db.Database.IsRelational())
+            await db.Database.MigrateAsync();
     }
     catch (Exception ex)
     {
