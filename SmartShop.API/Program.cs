@@ -126,9 +126,8 @@ app.UseAuthorization();
 app.UseRateLimiter();
 app.MapControllers();
 
-// Health check that does NOT touch the database. It's what the keep-alive
-// workflow pings: it keeps the App Service warm without waking up Azure SQL
-// (which would burn the free tier's monthly vCore-seconds).
+// Health check that does NOT touch the database, so pinging it never wakes up
+// Azure SQL (which would burn the free tier's monthly vCore-seconds).
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
 // Migrations and the Admin seed run in the background once the API is already

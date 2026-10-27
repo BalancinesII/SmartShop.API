@@ -28,8 +28,8 @@ Catalog with AI-generated descriptions and the shopping assistant:
 - **Clean Architecture** — domain-centric design with clear separation of concerns
 - **CQRS with MediatR** — every use case is an isolated, testable handler
 - **25 automated tests** — unit and integration test coverage, self-contained (no local secrets needed)
-- **CI/CD on Azure** — every push to `master` runs the test suite, and only deploys if all tests pass
-- **Health check + keep-alive** — a database-free `/health` endpoint, pinged by a scheduled workflow so the free-tier API doesn't go cold
+- **CI/CD on Azure** — pull requests are built and tested; every push to `master` runs the test suite, and only deploys if all tests pass
+- **Health check** — a database-free `/health` endpoint, so liveness checks never wake up the serverless database
 
 ## Tech stack
 
@@ -184,7 +184,7 @@ Runs on Azure entirely on free tiers:
 - **App Service (F1 Free)** — hosts the API
 - **Azure SQL (Free offer)** — 32GB storage, 100k vCore-seconds/month; the database auto-pauses when idle and resumes on the next request (handled transparently via `EnableRetryOnFailure`)
 - **Static Web Apps (Free)** — hosts the [Angular frontend](https://github.com/BalancinesII/SmartShop.Web)
-- **GitHub Actions** — pushing to `master` runs the tests and deploys automatically; a scheduled `keep-alive` workflow pings `/health` every 10 minutes (Always On isn't available on F1), without waking up the database
+- **GitHub Actions** — every pull request to `master` is built and tested; pushing to `master` runs the tests and deploys automatically
 
 CORS is configured to allow any `localhost` port (for local frontend development) plus the deployed Static Web App origin.
 
@@ -200,7 +200,7 @@ CORS is configured to allow any `localhost` port (for local frontend development
 - [x] Input validation with FluentValidation
 - [x] Global exception handling
 - [x] Unit and integration tests (25), run in CI before every deploy
-- [x] Health check and keep-alive for the free tier
+- [x] Health check endpoint
 - [x] Angular frontend
 - [x] Azure deployment with CI/CD
 - [x] Docker / docker-compose for local dev
