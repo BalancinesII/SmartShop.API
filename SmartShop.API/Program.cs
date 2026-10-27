@@ -144,7 +144,12 @@ static async Task InitializeDatabaseAsync(WebApplication app)
     {
         using var migrationScope = app.Services.CreateScope();
         var db = migrationScope.ServiceProvider.GetRequiredService<SmartShop.Infrastructure.Persistence.SmartShopDbContext>();
-        await db.Database.MigrateAsync();
+
+        // Migrations only exist for relational providers. The integration tests
+        // swap in the InMemory provider, where MigrateAsync throws and logged a
+        // misleading error on every run.
+        if (db.Database.IsRelational())
+            await db.Database.MigrateAsync();
     }
     catch (Exception ex)
     {
