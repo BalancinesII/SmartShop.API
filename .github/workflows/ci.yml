@@ -1,0 +1,35 @@
+# Builds and tests every pull request targeting master. It never deploys:
+# deployment lives in master_smartshop-api-nachosaiz.yml and only runs on
+# push to master.
+
+name: CI
+
+on:
+  pull_request:
+    branches:
+      - master
+
+# A new push to the same PR cancels the run that's still in progress.
+concurrency:
+  group: ci-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.x'
+
+      - name: Build
+        run: dotnet build SmartShop.API.sln --configuration Release
+
+      - name: Test
+        run: dotnet test SmartShop.API.sln --configuration Release --no-build
