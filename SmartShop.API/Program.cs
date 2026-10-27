@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using Serilog;
+using Serilog.Formatting.Compact;
 using SmartShop.API.Middleware;
 using SmartShop.API.OpenApi;
 using SmartShop.Application;
@@ -14,6 +16,23 @@ using SmartShop.Domain.Interfaces.Repositories;
 using SmartShop.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Structured logging with Serilog, written to the console only (no paid sinks
+// or external services). Readable text in Development; compact JSON elsewhere,
+// so Azure's log stream and Docker keep one structured event per line.
+// Minimum levels come from the "Serilog" section of appsettings.
+builder.Services.AddSerilog((services, loggerConfiguration) =>
+{
+    loggerConfiguration
+        .ReadFrom.Configuration(builder.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+
+    if (builder.Environment.IsDevelopment())
+        loggerConfiguration.WriteTo.Console();
+    else
+        loggerConfiguration.WriteTo.Console(new CompactJsonFormatter());
+});
 
 builder.Services.AddControllers();
 // Native OpenAPI document (/openapi/v1.json) with the JWT Bearer scheme, so
@@ -92,6 +111,9 @@ if (app.Environment.IsDevelopment())
         options.AddPreferredSecuritySchemes(BearerSecuritySchemeTransformer.SchemeName));
 }
 
+// One structured log line per request (method, path, status, elapsed time).
+// Registered before ExceptionMiddleware so it records the final status code.
+app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionMiddleware>();
 
 // HTTPS redirection is skipped inside containers (the container only exposes

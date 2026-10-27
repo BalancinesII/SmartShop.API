@@ -42,6 +42,7 @@ Catalog with AI-generated descriptions and the shopping assistant:
 | Validation | FluentValidation |
 | Auth | JWT Bearer |
 | Docs | Native OpenAPI (`Microsoft.AspNetCore.OpenApi`) + Scalar (Development only) |
+| Logging | Serilog (structured console logs, compact JSON outside Development) |
 | Tests | xUnit + Moq + FluentAssertions |
 | Hosting | Azure App Service (Free tier) + Azure SQL (Free offer) |
 | CI/CD | GitHub Actions |
