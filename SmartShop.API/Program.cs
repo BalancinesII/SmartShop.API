@@ -5,7 +5,11 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
+using Scalar.AspNetCore;
+using Serilog;
+using Serilog.Formatting.Compact;
 using SmartShop.API.Middleware;
+using SmartShop.API.OpenApi;
 using SmartShop.Application;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces.Repositories;
@@ -13,34 +17,28 @@ using SmartShop.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddControllers();
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+// Structured logging with Serilog, written to the console only (no paid sinks
+// or external services). Readable text in Development; compact JSON elsewhere,
+// so Azure's log stream and Docker keep one structured event per line.
+// Minimum levels come from the "Serilog" section of appsettings.
+builder.Services.AddSerilog((services, loggerConfiguration) =>
 {
-    c.AddSecurityDefinition("Bearer", new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-    {
-        Name = "Authorization",
-        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
-        Scheme = "Bearer",
-        BearerFormat = "JWT",
-        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
-        Description = "Enter the JWT token: Bearer {token}"
-    });
-    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
-    {
-        {
-            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
-            {
-                Reference = new Microsoft.OpenApi.Models.OpenApiReference
-                {
-                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
-                    Id = "Bearer"
-                }
-            },
-            Array.Empty<string>()
-        }
-    });
+    loggerConfiguration
+        .ReadFrom.Configuration(builder.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext();
+
+    if (builder.Environment.IsDevelopment())
+        loggerConfiguration.WriteTo.Console();
+    else
+        loggerConfiguration.WriteTo.Console(new CompactJsonFormatter());
 });
+
+builder.Services.AddControllers();
+// Native OpenAPI document (/openapi/v1.json) with the JWT Bearer scheme, so
+// endpoints can be tried from Scalar with a token. Only mapped in Development.
+builder.Services.AddOpenApi(options =>
+    options.AddDocumentTransformer<BearerSecuritySchemeTransformer>());
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -108,10 +106,14 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+        options.AddPreferredSecuritySchemes(BearerSecuritySchemeTransformer.SchemeName));
 }
 
+// One structured log line per request (method, path, status, elapsed time).
+// Registered before ExceptionMiddleware so it records the final status code.
+app.UseSerilogRequestLogging();
 app.UseMiddleware<ExceptionMiddleware>();
 
 // HTTPS redirection is skipped inside containers (the container only exposes

@@ -1,0 +1,31 @@
+# Weekly dependency updates. Minor and patch updates of each ecosystem are
+# grouped into a single PR; major updates come as separate PRs, since they
+# may need code changes. Every PR is built and tested by ci.yml.
+
+version: 2
+updates:
+  - package-ecosystem: nuget
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: chore(deps)
+    groups:
+      nuget-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    commit-message:
+      prefix: ci(deps)
+    groups:
+      actions-minor-and-patch:
+        update-types:
+          - minor
+          - patch
