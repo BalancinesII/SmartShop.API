@@ -27,7 +27,7 @@ Catalog with AI-generated descriptions and the shopping assistant:
 - **Global exception handling** — consistent error responses across all endpoints
 - **Clean Architecture** — domain-centric design with clear separation of concerns
 - **CQRS with MediatR** — every use case is an isolated, testable handler
-- **25 automated tests** — unit and integration test coverage, self-contained (no local secrets needed)
+- **46 automated tests** — unit and integration test coverage, self-contained (no local secrets needed)
 - **CI/CD on Azure** — pull requests are built and tested; every push to `master` runs the test suite, and only deploys if all tests pass
 - **Health check** — a database-free `/health` endpoint, so liveness checks never wake up the serverless database
 
@@ -142,7 +142,7 @@ dotnet run --project SmartShop.API
 ```bash
 dotnet test
 ```
-The integration tests bring their own test configuration (JWT key, etc.) and use an in-memory database, so they run without `appsettings.Development.json` — exactly as they do in CI.
+The integration tests bring their own test configuration (JWT key, etc.) and use an in-memory database, so they run without `appsettings.Development.json` — exactly as they do in CI. The Claude and Stripe services are replaced by fakes, so no test ever calls an external API.
 
 ## AI integration
 
@@ -199,7 +199,7 @@ CORS is configured to allow any `localhost` port (for local frontend development
 - [x] AI chatbot with product catalog context
 - [x] Input validation with FluentValidation
 - [x] Global exception handling
-- [x] Unit and integration tests (25), run in CI before every deploy
+- [x] Unit and integration tests (46), run in CI before every deploy
 - [x] Health check endpoint
 - [x] Angular frontend
 - [x] Azure deployment with CI/CD
