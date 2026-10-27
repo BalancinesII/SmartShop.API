@@ -18,6 +18,10 @@ public static class DependencyInjection
             typeof(IPipelineBehavior<,>),
             typeof(ValidationBehaviour<,>));
 
+        services.AddTransient(
+            typeof(IStreamPipelineBehavior<,>),
+            typeof(StreamValidationBehaviour<,>));
+
         return services;
     }
 }
