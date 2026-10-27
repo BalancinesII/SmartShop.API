@@ -27,7 +27,7 @@ Catalog with AI-generated descriptions and the shopping assistant:
 - **Global exception handling** — consistent error responses across all endpoints
 - **Clean Architecture** — domain-centric design with clear separation of concerns
 - **CQRS with MediatR** — every use case is an isolated, testable handler
-- **46 automated tests** — unit and integration test coverage, self-contained (no local secrets needed)
+- **48 automated tests** — unit and integration test coverage, self-contained (no local secrets needed)
 - **CI/CD on Azure** — pull requests are built and tested; every push to `master` runs the test suite, and only deploys if all tests pass
 - **Health check** — a database-free `/health` endpoint, so liveness checks never wake up the serverless database
 
@@ -41,7 +41,7 @@ Catalog with AI-generated descriptions and the shopping assistant:
 | CQRS | MediatR |
 | Validation | FluentValidation |
 | Auth | JWT Bearer |
-| Docs | Swagger / OpenAPI (Development only) |
+| Docs | Native OpenAPI (`Microsoft.AspNetCore.OpenApi`) + Scalar (Development only) |
 | Tests | xUnit + Moq + FluentAssertions |
 | Hosting | Azure App Service (Free tier) + Azure SQL (Free offer) |
 | CI/CD | GitHub Actions |
@@ -136,7 +136,7 @@ cd SmartShop.API
 dotnet run --project SmartShop.API
 ```
 
-4. Open Swagger at `https://localhost:7024/swagger` (Development environment only)
+4. Open Scalar at `https://localhost:7024/scalar` (Development environment only). The raw OpenAPI document is at `/openapi/v1.json`. To call protected endpoints, log in with `/api/Auth/login` and paste the token into the Bearer authentication field
 
 ### Running tests
 ```bash
@@ -199,7 +199,7 @@ CORS is configured to allow any `localhost` port (for local frontend development
 - [x] AI chatbot with product catalog context
 - [x] Input validation with FluentValidation
 - [x] Global exception handling
-- [x] Unit and integration tests (46), run in CI before every deploy
+- [x] Unit and integration tests (48), run in CI before every deploy
 - [x] Health check endpoint
 - [x] Angular frontend
 - [x] Azure deployment with CI/CD
