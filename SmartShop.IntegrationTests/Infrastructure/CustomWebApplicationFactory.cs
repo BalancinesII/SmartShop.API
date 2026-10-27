@@ -7,6 +7,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using SmartShop.Domain.Entities;
+using SmartShop.Domain.Interfaces.Services;
 using SmartShop.Infrastructure.Persistence;
 
 namespace SmartShop.IntegrationTests.Infrastructure;
@@ -44,6 +45,13 @@ public class CustomWebApplicationFactory : WebApplicationFactory<Program>
             // Add in-memory DbContext
             services.AddDbContext<SmartShopDbContext>(options =>
                 options.UseInMemoryDatabase("TestDb"));
+
+            // Servicios externos sustituidos por fakes: ningún test llama a
+            // Claude ni a Stripe de verdad (cuestan dinero y necesitan claves).
+            services.RemoveAll<IAIService>();
+            services.AddScoped<IAIService, FakeAIService>();
+            services.RemoveAll<IPaymentService>();
+            services.AddScoped<IPaymentService, FakePaymentService>();
 
             // Crear la base de datos en memoria y sembrar un Admin para los tests
             var sp = services.BuildServiceProvider();
