@@ -27,7 +27,7 @@ Catalog with AI-generated descriptions and the shopping assistant:
 - **Global exception handling** — consistent error responses across all endpoints
 - **Clean Architecture** — domain-centric design with clear separation of concerns
 - **CQRS with MediatR** — every use case is an isolated, testable handler
-- **48 automated tests** — unit and integration test coverage, self-contained (no local secrets needed)
+- **65 automated tests** — unit and integration test coverage, self-contained (no local secrets needed)
 - **CI/CD on Azure** — pull requests are built and tested; every push to `master` runs the test suite, and only deploys if all tests pass
 - **Health check** — a database-free `/health` endpoint, so liveness checks never wake up the serverless database
 
@@ -83,6 +83,7 @@ Dependency rule: outer layers depend on inner layers, never the reverse.
 | Method | Endpoint | Description |
 |---|---|---|
 | POST | `/api/Chat/message` | Send a message to the AI assistant |
+| POST | `/api/Chat/message/stream` | Same, but the reply is streamed as Server-Sent Events |
 
 ### Health
 | Method | Endpoint | Description |
@@ -153,6 +154,21 @@ Sends product name, category and price to Claude and returns a 2-3 sentence pers
 ### Customer support chatbot
 Maintains conversation history per session stored in SQL Server. Each request includes the last 10 messages as context and the full product catalog so Claude can answer questions about real inventory, prices and availability.
 
+`POST /api/Chat/message/stream` takes the same body and returns `text/event-stream` using Claude's streaming API, so the reply appears as it is written:
+
+```
+event: chunk
+data: {"text":"Yes, we have "}
+
+event: chunk
+data: {"text":"running shoes."}
+
+event: done
+data: {"sessionId":"..."}
+```
+
+The complete answer is saved to the history once the stream finishes. Invalid messages still get a `400` before the stream starts; a failure mid-answer ends the stream with an `event: error`. Both chat endpoints share the same validation (1000 characters max) and the same per-IP rate limit.
+
 ## Payments (Stripe)
 
 Product checkout uses [Stripe Checkout](https://stripe.com/docs/payments/checkout) — the hosted payment page, so card details never touch this server.
@@ -200,7 +216,7 @@ CORS is configured to allow any `localhost` port (for local frontend development
 - [x] AI chatbot with product catalog context
 - [x] Input validation with FluentValidation
 - [x] Global exception handling
-- [x] Unit and integration tests (48), run in CI before every deploy
+- [x] Unit and integration tests (65), run in CI before every deploy
 - [x] Health check endpoint
 - [x] Angular frontend
 - [x] Azure deployment with CI/CD

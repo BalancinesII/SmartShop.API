@@ -1,4 +1,5 @@
-﻿using Anthropic.SDK;
+﻿using System.Runtime.CompilerServices;
+using Anthropic.SDK;
 using Anthropic.SDK.Messaging;
 using SmartShop.Domain.Entities;
 using SmartShop.Domain.Interfaces.Services;
@@ -47,9 +48,41 @@ public class ClaudeAIService : IAIService
     }
 
     public async Task<string> SendChatMessageAsync(
-    string userMessage,
-    IEnumerable<ChatMessage> history,
-    IEnumerable<Product> availableProducts)
+        string userMessage,
+        IEnumerable<ChatMessage> history,
+        IEnumerable<Product> availableProducts)
+    {
+        var request = BuildChatRequest(userMessage, history, availableProducts);
+
+        var response = await _client.Messages.GetClaudeMessageAsync(request);
+        return response.Content.OfType<TextContent>().FirstOrDefault()?.Text ?? string.Empty;
+    }
+
+    public async IAsyncEnumerable<string> StreamChatMessageAsync(
+        string userMessage,
+        IEnumerable<ChatMessage> history,
+        IEnumerable<Product> availableProducts,
+        [EnumeratorCancellation] CancellationToken cancellationToken = default)
+    {
+        var request = BuildChatRequest(userMessage, history, availableProducts);
+        request.Stream = true;
+
+        // The token cancels the HTTP call to Anthropic as well: if the visitor
+        // closes the chat mid-answer, Claude stops generating (and billing) tokens.
+        await foreach (var response in _client.Messages.StreamClaudeMessageAsync(request, cancellationToken))
+        {
+            var text = response.Delta?.Text;
+            if (!string.IsNullOrEmpty(text))
+                yield return text;
+        }
+    }
+
+    // Shared by the regular and the streaming chat so both send exactly the same
+    // prompt, model and token limit (streaming costs the same as before).
+    private static MessageParameters BuildChatRequest(
+        string userMessage,
+        IEnumerable<ChatMessage> history,
+        IEnumerable<Product> availableProducts)
     {
         var messages = new List<Message>();
 
@@ -66,30 +99,27 @@ public class ClaudeAIService : IAIService
                 $"- {p.Name} | Category: {p.Category} | Price: {p.Price:C} | Stock: {p.Stock}"))
             : "No products are available at the moment.";
 
-        var request = new MessageParameters
+        return new MessageParameters
         {
             Model = Model,
             MaxTokens = 500,
             System = new List<SystemMessage>
-        {
-            new SystemMessage(
-                $"""
-                You are the virtual assistant for SmartShop, an online store.
-                You help customers with questions about products, orders and returns.
-                Always reply in the customer's language.
-                Be friendly, concise and helpful. If you don't know something, say so honestly.
+            {
+                new SystemMessage(
+                    $"""
+                    You are the virtual assistant for SmartShop, an online store.
+                    You help customers with questions about products, orders and returns.
+                    Always reply in the customer's language.
+                    Be friendly, concise and helpful. If you don't know something, say so honestly.
 
-                AVAILABLE PRODUCT CATALOG:
-                {productCatalog}
+                    AVAILABLE PRODUCT CATALOG:
+                    {productCatalog}
 
-                Use this information to answer questions about availability,
-                prices and categories. Do not invent products that are not in the catalog.
-                """)
-        },
+                    Use this information to answer questions about availability,
+                    prices and categories. Do not invent products that are not in the catalog.
+                    """)
+            },
             Messages = messages
         };
-
-        var response = await _client.Messages.GetClaudeMessageAsync(request);
-        return response.Content.OfType<TextContent>().FirstOrDefault()?.Text ?? string.Empty;
     }
 }

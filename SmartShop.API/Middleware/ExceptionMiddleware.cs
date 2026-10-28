@@ -22,9 +22,21 @@ public class ExceptionMiddleware
         {
             await _next(context);
         }
+        catch (OperationCanceledException) when (context.RequestAborted.IsCancellationRequested)
+        {
+            // The client disconnected (e.g. closed the chat mid-stream): there is
+            // nobody to answer and it is not a server error.
+            _logger.LogInformation("Request aborted by the client.");
+        }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Unhandled exception: {Message}", ex.Message);
+
+            // A streamed response (SSE) may have sent its headers already; the
+            // status code can no longer change, so there is nothing to write.
+            if (context.Response.HasStarted)
+                return;
+
             await HandleExceptionAsync(context, ex);
         }
     }
